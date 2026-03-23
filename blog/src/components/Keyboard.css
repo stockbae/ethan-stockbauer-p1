@@ -1,0 +1,103 @@
+/* ============================================================
+   Keyboard.css
+   Piano-style keyboard layout.
+
+   Each .keyboard__octave is a relative-positioned row.
+   White keys are flex children.
+   Black keys are absolutely positioned on top.
+   ============================================================ */
+
+/* ---- outer container ---- */
+.keyboard {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding: 16px 0 24px;
+  user-select: none;
+}
+
+/* ---- one octave ---- */
+.keyboard__octave {
+  position: relative;   /* anchors the absolute black keys */
+  display: flex;
+  flex-direction: row;
+}
+
+/* ============================================================
+   White keys
+   ============================================================ */
+.keyboard__key--white {
+  position: relative;   /* z-index stacking context */
+  z-index: 1;
+
+  width: 48px;
+  height: 160px;
+
+  background: #fff;
+  border: 1px solid #aaa;
+  border-radius: 0 0 6px 6px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+
+  cursor: pointer;
+  transition: background 0.08s ease;
+}
+
+.keyboard__key--white:hover {
+  background: #e8f4ff;
+}
+
+.keyboard__key--white:active {
+  background: #b8d4f8;
+}
+
+/* ---- note label on white keys ---- */
+.keyboard__key-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Black keys
+   ============================================================ */
+.keyboard__key--black {
+  position: absolute;
+  z-index: 2;           /* sits on top of white keys */
+  top: 0;
+
+  /* width / height are set as percentages of the octave width.
+     We override width inline via the calculated left% in the component.
+     Here we set height and a sensible default width. */
+  width: calc(100% / 7 * 0.6);   /* ~60% of one white key width */
+  height: 100px;
+
+  background: #222;
+  border: 1px solid #000;
+  border-radius: 0 0 4px 4px;
+
+  cursor: pointer;
+  transition: background 0.08s ease;
+}
+
+.keyboard__key--black:hover {
+  background: #444;
+}
+
+.keyboard__key--black:active {
+  background: #666;
+}
+
+/* ============================================================
+   Empty state
+   ============================================================ */
+.keyboard__empty {
+  color: #888;
+  font-style: italic;
+  padding: 24px 0;
+}
