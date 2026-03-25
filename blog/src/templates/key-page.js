@@ -9,7 +9,7 @@ function KeyPage({ data }) {
   return (
     <Layout>
       <nav style={{ marginBottom: "1rem" }}>
-        <Link to="/">← Back to keyboard</Link>
+        <Link to="/">Back to Keyboard</Link>
       </nav>
 
       <h1>Key: {key.keyId}</h1>
@@ -28,7 +28,7 @@ function KeyPage({ data }) {
             </tr>
             <tr>
               <th style={{ textAlign: "left", padding: "4px 16px 4px 0" }}>Octave</th>
-              <td>{key.octave ?? "—"}</td>
+              <td>{key.octave}</td>
             </tr>
           </tbody>
         </table>

@@ -11,9 +11,9 @@ const IndexPage = ({ data }) => {
   return (
     <Layout>
       <section>
-        <h2>Interactive Keyboard</h2>
+        <h2>Ethan's MIDI Playable Keyboard</h2>
         <p style={{ color: "#666", marginBottom: "1rem" }}>
-          Click a key to view and edit its configuration.
+          Click a key to view its info or play using a MIDI controller.
         </p>
         <Keyboard keys={keyboardKeys} />
       </section>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { navigate } from "gatsby"
 import * as Tone from "tone"
 import styled from "styled-components"
@@ -20,7 +20,7 @@ const WhiteKey = styled.button`
   z-index: 1;
   width: 48px;
   height: 160px;
-  background: #fff;
+  background: ${props => props.$playing ? "#b8d4f8" : "#fff"};
   border: 1px solid #aaa;
   border-radius: 0 0 6px 6px;
   display: flex;
@@ -29,7 +29,6 @@ const WhiteKey = styled.button`
   padding-bottom: 8px;
   cursor: pointer;
   &:hover { background: #e8f4ff; }
-  &:active { background: #b8d4f8; }
 `
 
 const BlackKey = styled.button`
@@ -38,12 +37,11 @@ const BlackKey = styled.button`
   top: 0;
   width: calc(100% / 7 * 0.6);
   height: 100px;
-  background: #222;
+  background: ${props => props.$playing ? "#666" : "#222"};
   border: 1px solid #000;
   border-radius: 0 0 4px 4px;
   cursor: pointer;
   &:hover { background: #444; }
-  &:active { background: #666; }
 `
 
 const BLACK_KEY_NAMES = new Set(["C#", "D#", "F#", "G#", "A#"])
@@ -73,7 +71,7 @@ function groupByOctave(keys) {
     .map(([oct, octKeys]) => [oct, [...octKeys].sort((a, b) => CHROMATIC_ORDER.indexOf(a.keyId) - CHROMATIC_ORDER.indexOf(b.keyId))])
 }
 
-function OctaveGroup({ keys }) {
+function OctaveGroup({ keys, activeKeys, onPlay }) {
   const whiteKeys = keys.filter(k => !BLACK_KEY_NAMES.has(k.keyId))
   const blackKeys = keys.filter(k => BLACK_KEY_NAMES.has(k.keyId))
 
@@ -83,19 +81,20 @@ function OctaveGroup({ keys }) {
   }
 
   function handleClick(key) {
-    playNote(key.assignedNote)
+    onPlay(key)
     navigate(`/key/${key.keyId.replace(/#/g, 's')}`)
   }
 
   return (
     <OctaveWrapper>
       {whiteKeys.map(key => (
-        <WhiteKey key={key.keyId} onClick={() => handleClick(key)}>
+        <WhiteKey key={key.keyId} $playing={activeKeys.has(key.keyId)} onClick={() => handleClick(key)}>
         </WhiteKey>
       ))}
       {blackKeys.map(key => (
         <BlackKey
           key={key.keyId}
+          $playing={activeKeys.has(key.keyId)}
           style={{ left: `${blackKeyLeft(key.keyId)}%` }}
           onClick={() => handleClick(key)}
         />
@@ -105,6 +104,16 @@ function OctaveGroup({ keys }) {
 }
 
 function Keyboard({ keys = [] }) {
+  const [activeKeys, setActiveKeys] = useState(new Set())
+
+  function triggerKey(keyId, assignedNote) {
+    playNote(assignedNote)
+    setActiveKeys(prev => new Set(prev).add(keyId))
+    setTimeout(() => {
+      setActiveKeys(prev => { const next = new Set(prev); next.delete(keyId); return next })
+    }, 300)
+  }
+
   useEffect(() => {
     if (!navigator.requestMIDIAccess) return
     const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -113,7 +122,8 @@ function Keyboard({ keys = [] }) {
         input.onmidimessage = ({ data }) => {
           const [status, note, velocity] = data
           if (status === 144 && velocity > 0) {
-            playNote(`${NOTE_NAMES[note % 12]}${Math.floor(note / 12) - 1}`)
+            const keyId = NOTE_NAMES[note % 12]
+            triggerKey(keyId, `${keyId}${Math.floor(note / 12) - 1}`)
           }
         }
       })
@@ -123,7 +133,7 @@ function Keyboard({ keys = [] }) {
   return (
     <KeyboardWrapper>
       {groupByOctave(keys).map(([octave, octaveKeys]) => (
-        <OctaveGroup key={octave} keys={octaveKeys} />
+        <OctaveGroup key={octave} keys={octaveKeys} activeKeys={activeKeys} onPlay={key => triggerKey(key.keyId, key.assignedNote)} />
       ))}
     </KeyboardWrapper>
   )
