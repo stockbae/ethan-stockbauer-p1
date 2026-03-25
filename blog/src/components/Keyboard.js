@@ -32,13 +32,6 @@ const WhiteKey = styled.button`
   &:active { background: #b8d4f8; }
 `
 
-const KeyLabel = styled.span`
-  font-size: 11px;
-  font-weight: 600;
-  color: #555;
-  pointer-events: none;
-`
-
 const BlackKey = styled.button`
   position: absolute;
   z-index: 2;
@@ -57,11 +50,13 @@ const BLACK_KEY_NAMES = new Set(["C#", "D#", "F#", "G#", "A#"])
 
 const BLACK_KEY_AFTER_WHITE = { "C#": 0, "D#": 1, "F#": 3, "G#": 4, "A#": 5 }
 
+const CHROMATIC_ORDER = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
 let synth = null
 
 function playNote(assignedNote) {
   Tone.start().then(() => {
-    if (!synth) synth = new Tone.Synth().toDestination()
+    if (!synth) synth = new Tone.PolySynth(Tone.Synth).toDestination()
     synth.triggerAttackRelease(assignedNote, "8n")
   })
 }
@@ -73,7 +68,9 @@ function groupByOctave(keys) {
     if (!groups[oct]) groups[oct] = []
     groups[oct].push(key)
   })
-  return Object.entries(groups).sort(([a], [b]) => a - b)
+  return Object.entries(groups)
+    .sort(([a], [b]) => a - b)
+    .map(([oct, octKeys]) => [oct, [...octKeys].sort((a, b) => CHROMATIC_ORDER.indexOf(a.keyId) - CHROMATIC_ORDER.indexOf(b.keyId))])
 }
 
 function OctaveGroup({ keys }) {
@@ -94,7 +91,6 @@ function OctaveGroup({ keys }) {
     <OctaveWrapper>
       {whiteKeys.map(key => (
         <WhiteKey key={key.keyId} onClick={() => handleClick(key)}>
-          <KeyLabel>{key.keyId}</KeyLabel>
         </WhiteKey>
       ))}
       {blackKeys.map(key => (
