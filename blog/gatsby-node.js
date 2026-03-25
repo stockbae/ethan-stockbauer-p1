@@ -9,35 +9,57 @@ const path = require('path');
 /**
  * @type {import('gatsby').GatsbyNode['createPages']}
  */
-exports.createPages = async ({ graphql,actions }) => {
+exports.createPages = async ({ graphql, actions }) => {
   const { createPage } = actions
-  return new Promise((resolve, reject) => {
-    graphql(`
-      {
-        allContentfulBlogPost {
-          edges {
-            node {
-              slug 
-            }
+
+  const result = await graphql(`
+    {
+      # ── Blog posts ──────────────────────────────────────────
+      allContentfulBlogPost {
+        edges {
+          node {
+            slug
           }
         }
       }
-    `).then(result => {
-      if (result.errors) {
-        reject(result.errors);
+
+      # ── Keyboard keys ───────────────────────────────────────
+      # Requires a "KeyboardKey" content type in Contentful with fields:
+      #   keyId        (Short text)  e.g. "C", "D#"
+      #   assignedNote (Short text)  e.g. "C4", "D#3"
+      #   octave       (Number, optional)
+      allContentfulKeyboardKey {
+        edges {
+          node {
+            keyId
+          }
+        }
       }
+    }
+  `)
 
-      result.data.allContentfulBlogPost.edges.forEach((edge) => {
-        createPage({
-          path: edge.node.slug,
-          component: require.resolve('./src/templates/blog-post.js'),
-          context: {
-            slug: edge.node.slug,
-          },
-        })
-      })
+  if (result.errors) {
+    throw result.errors
+  }
 
-      resolve()
+  // ── Create blog-post pages ───────────────────────────────────
+  result.data.allContentfulBlogPost.edges.forEach(({ node }) => {
+    createPage({
+      path: node.slug,
+      component: require.resolve('./src/templates/blog-post.js'),
+      context: { slug: node.slug },
+    })
+  })
+
+  // ── Create keyboard-key pages ────────────────────────────────
+  // Each page is created at /key/<keyId>  (e.g. /key/C, /key/D%23)
+  // The keyId is passed as context so the key-page template can
+  // query the full entry with  contentfulKeyboardKey(keyId: { eq: $keyId })
+  result.data.allContentfulKeyboardKey.edges.forEach(({ node }) => {
+    createPage({
+      path: `/key/${encodeURIComponent(node.keyId)}`,
+      component: require.resolve('./src/templates/key-page.js'),
+      context: { keyId: node.keyId },
     })
   })
 }
